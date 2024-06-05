@@ -11,12 +11,12 @@ import (
 
 // Service is for managing sessions.
 type Service struct {
-	Database *database.Connection
+	Database *database.Manager
 	Manager  *scs.SessionManager
 }
 
 // NewService creates a new instance of the Service struct.
-func NewService(database *database.Connection) *Service {
+func NewService(database *database.Manager) *Service {
 	sessionManager := scs.New()
 	sessionManager.Store = postgresstore.New(database.DB)
 	return &Service{Database: database, Manager: sessionManager}
