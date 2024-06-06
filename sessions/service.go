@@ -3,10 +3,9 @@ package sessions
 import (
 	"github.com/alexedwards/scs/postgresstore"
 	"github.com/alexedwards/scs/v2"
+	"github.com/shvdg-dev/base-pkg/database"
 	"log"
 	"net/http"
-	consts "tabs/internal/constants"
-	"tabs/pkg/base/database"
 )
 
 // Service is for managing sessions.
@@ -42,13 +41,4 @@ func (s *Service) Store(key string, value interface{}, request *http.Request) {
 // Get retrieves the value associated with the given key from the session manager.
 func (s *Service) Get(key string, request *http.Request) interface{} {
 	return s.Manager.Get(request.Context(), key)
-}
-
-// IsAuthenticated checks whether a request is authenticated.
-func (s *Service) IsAuthenticated(request *http.Request) bool {
-	isAuthenticated, ok := s.Get(consts.ValueIsAuthenticated, request).(bool)
-	if !ok {
-		return false
-	}
-	return isAuthenticated
 }
