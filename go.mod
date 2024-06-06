@@ -1,4 +1,4 @@
-module base-pkg
+module github.com/shvdg-dev/base-pkg
 
 go 1.22.2
 
