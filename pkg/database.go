@@ -13,10 +13,20 @@ type DatabaseManager struct {
 
 // NewDatabaseManager creates a new instance of DatabaseManager.
 func NewDatabaseManager(driverName string, URL string) *DatabaseManager {
+	validateDriver(driverName)
+
 	manager := &DatabaseManager{}
 	manager.Connect(driverName, URL)
 	go manager.ConnectionMonitor(driverName, URL)
+
 	return manager
+}
+
+// validateDriver checks if the given driverName is "postgres"
+func validateDriver(driverName string) {
+	if driverName != "postgres" {
+		log.Fatalf("Invalid driver; only 'postgres' is supported. Received: %s", driverName)
+	}
 }
 
 // Connect establishes a connection to the database using the specified driver and URL.
