@@ -4,7 +4,6 @@ import (
 	"github.com/alexedwards/scs/postgresstore"
 	"github.com/alexedwards/scs/v2"
 	"github.com/shvdg-dev/base-pkg/database"
-	"log"
 	"net/http"
 )
 
@@ -21,24 +20,12 @@ func NewService(database *database.Manager) *Service {
 	return &Service{Database: database, Manager: sessionManager}
 }
 
-// CreateSessionsTable creates the sessions table in the database and adds an expiry index.
-func (s *Service) CreateSessionsTable() {
-	_, err := s.Database.DB.Exec(createSessionsTableQuery)
-	if err != nil {
-		log.Fatal(err)
-	}
-	_, err = s.Database.DB.Exec(createSessionExpiryIndexQuery)
-	if err != nil {
-		log.Fatal(err)
-	}
-}
-
 // Store stores a value in the session using the provided key and value.
-func (s *Service) Store(key string, value interface{}, request *http.Request) {
+func (s *Service) Store(request *http.Request, key string, value interface{}) {
 	s.Manager.Put(request.Context(), key, value)
 }
 
 // Get retrieves the value associated with the given key from the session manager.
-func (s *Service) Get(key string, request *http.Request) interface{} {
+func (s *Service) Get(request *http.Request, key string) interface{} {
 	return s.Manager.Get(request.Context(), key)
 }

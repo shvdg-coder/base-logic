@@ -14,10 +14,10 @@ type Localizer struct {
 }
 
 // NewLocalizer creates a new instance of Localizer.
-func NewLocalizer() *Localizer {
+func NewLocalizer(languages ...string) *Localizer {
 	bundle := i18n.NewBundle(language.English)
 	bundle.RegisterUnmarshalFunc("toml", toml.Unmarshal)
-	localizer := i18n.NewLocalizer(bundle, "en")
+	localizer := i18n.NewLocalizer(bundle, languages...)
 	return &Localizer{bundle: bundle, localizer: localizer}
 }
 
