@@ -1,4 +1,4 @@
-package i18n
+package pkg
 
 import (
 	"github.com/BurntSushi/toml"

@@ -1,4 +1,4 @@
-package logger
+package pkg
 
 // Logger defines the logging behavior.
 type Logger struct {
