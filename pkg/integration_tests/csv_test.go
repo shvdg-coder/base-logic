@@ -2,11 +2,10 @@ package integration_tests
 
 import (
 	"database/sql"
-	"encoding/csv"
 	"fmt"
+	"github.com/shvdg-dev/base-logic/pkg"
 	"github.com/shvdg-dev/base-logic/pkg/testable"
 	"log"
-	"os"
 	"testing"
 )
 
@@ -24,12 +23,12 @@ func TestInsertingCSV(t *testing.T) {
 		log.Fatal(err)
 	}
 
-	err = db.InsertCSV(myContactsCSVPath, contactsTable, contactsFields)
+	err = db.InsertCSVFile(myContactsCSVPath, contactsTable, contactsFields)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	csvRows, err := getRowsFromCSV(myContactsCSVPath)
+	csvRows, err := pkg.GetCSVRecords(myContactsCSVPath)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -49,23 +48,6 @@ func TestInsertingCSV(t *testing.T) {
 	if err = tableRows.Err(); err != nil {
 		log.Fatal(err)
 	}
-}
-
-// getRowsFromCSV retrieves the rows, minus the headers, of the provided .csv file.
-func getRowsFromCSV(filePath string) ([][]string, error) {
-	file, err := os.Open(filePath)
-	if err != nil {
-		return nil, err
-	}
-	defer file.Close()
-
-	reader := csv.NewReader(file)
-	rows, err := reader.ReadAll()
-	if err != nil {
-		return nil, err
-	}
-
-	return rows[1:], nil
 }
 
 // compareRows compares the rows from the .csv file with those found in the table.

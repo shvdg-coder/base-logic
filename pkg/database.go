@@ -2,12 +2,10 @@ package pkg
 
 import (
 	"database/sql"
-	"encoding/csv"
 	"fmt"
 	"github.com/lib/pq"
 	_ "github.com/lib/pq"
 	"log"
-	"os"
 	"time"
 )
 
@@ -104,20 +102,18 @@ func (d *DbManager) CloseRows(rows *sql.Rows) {
 	}
 }
 
-// InsertCSV inserts the contents of a .csv file into the database.
-func (d *DbManager) InsertCSV(filePath, table string, fields []string) error {
-	file, err := os.Open(filePath)
+// InsertCSVFile is the main function that coordinates opening the file and inserting the records to the database
+func (d *DbManager) InsertCSVFile(filePath, table string, fields []string) error {
+	records, err := GetCSVRecords(filePath)
 	if err != nil {
-		return fmt.Errorf("failed to open file: %s", err.Error())
-	}
-	defer file.Close()
-
-	reader := csv.NewReader(file)
-	records, err := reader.ReadAll()
-	if err != nil {
-		return fmt.Errorf("failed to read the CSV: %s", err.Error())
+		return err
 	}
 
+	return d.InsertCSVRecords(table, fields, records)
+}
+
+// InsertCSVRecords inserts the contents of a .csv file into the database.
+func (d *DbManager) InsertCSVRecords(table string, fields []string, records [][]string) error {
 	transaction, err := d.Begin()
 	if err != nil {
 		return fmt.Errorf("unable to start transaction: %s", err.Error())
@@ -128,8 +124,7 @@ func (d *DbManager) InsertCSV(filePath, table string, fields []string) error {
 		return fmt.Errorf("unable to prepare statement: %s", err.Error())
 	}
 
-	// Skip the headers
-	for _, record := range records[1:] {
+	for _, record := range records {
 		data := make([]interface{}, len(record))
 		for i, v := range record {
 			data[i] = v
