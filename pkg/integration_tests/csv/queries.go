@@ -1,4 +1,4 @@
-package integration_tests
+package csv
 
 // createContactsTableQuery creates the contacts table.
 const createContactsTableQuery = `CREATE TABLE contacts (
