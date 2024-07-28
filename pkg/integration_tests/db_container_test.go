@@ -5,6 +5,7 @@ import (
 	"testing"
 )
 
+// TestDbContainer tests whether a database container can be created and a connection established.
 func TestDbContainer(t *testing.T) {
 	db, err := testable.NewDbContainer()
 	if err != nil {
@@ -13,15 +14,8 @@ func TestDbContainer(t *testing.T) {
 
 	defer db.Teardown()
 
-	// Create a table
-	_, err = db.Query("CREATE TABLE test_table (id INT PRIMARY KEY, name TEXT)")
+	err = db.Ping()
 	if err != nil {
-		t.Fatalf("Failed to create table: %v", err)
-	}
-
-	// Drop a table
-	_, err = db.Query("DROP TABLE IF EXISTS test_table")
-	if err != nil {
-		t.Fatalf("Failed to drop table: %v", err)
+		t.Fatal(err)
 	}
 }

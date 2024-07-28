@@ -2,8 +2,12 @@ package pkg
 
 import (
 	"database/sql"
+	"encoding/csv"
+	"fmt"
+	"github.com/lib/pq"
 	_ "github.com/lib/pq"
 	"log"
+	"os"
 	"time"
 )
 
@@ -98,4 +102,50 @@ func (d *DbManager) CloseRows(rows *sql.Rows) {
 	if err := rows.Close(); err != nil {
 		log.Printf("Failed to close rows: %s", err)
 	}
+}
+
+// InsertCSV inserts the contents of a .csv file into the database.
+func (d *DbManager) InsertCSV(filePath, table string, fields []string) error {
+	file, err := os.Open(filePath)
+	if err != nil {
+		return fmt.Errorf("failed to open file: %s", err.Error())
+	}
+	defer file.Close()
+
+	reader := csv.NewReader(file)
+	records, err := reader.ReadAll()
+	if err != nil {
+		return fmt.Errorf("failed to read the CSV: %s", err.Error())
+	}
+
+	transaction, err := d.Begin()
+	if err != nil {
+		return fmt.Errorf("unable to start transaction: %s", err.Error())
+	}
+
+	statement, err := transaction.Prepare(pq.CopyIn(table, fields...))
+	if err != nil {
+		return fmt.Errorf("unable to prepare statement: %s", err.Error())
+	}
+
+	// Skip the headers
+	for _, record := range records[1:] {
+		data := make([]interface{}, len(record))
+		for i, v := range record {
+			data[i] = v
+		}
+		if _, err = statement.Exec(data...); err != nil {
+			return fmt.Errorf("failed to execute statement: %s", err.Error())
+		}
+	}
+
+	if err = statement.Close(); err != nil {
+		return fmt.Errorf("failed to close statement: %s", err.Error())
+	}
+
+	if err = transaction.Commit(); err != nil {
+		return fmt.Errorf("failed to commit transaction: %s", err.Error())
+	}
+
+	return nil
 }

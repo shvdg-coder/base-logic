@@ -85,8 +85,3 @@ func (t *DbContainer) Teardown() error {
 	t.Disconnect()
 	return t.Terminate(context.Background())
 }
-
-// InsertCSV inserts the contents of a .csv file into the database.
-func (t *DbContainer) InsertCSV(filePath string) {
-	//TODO: Do the damn thing
-}
