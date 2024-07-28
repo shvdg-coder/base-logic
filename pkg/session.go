@@ -8,12 +8,12 @@ import (
 
 // SessionManager is for managing sessions.
 type SessionManager struct {
-	Database *DatabaseManager
+	Database *DbManager
 	Manager  *scs.SessionManager
 }
 
 // NewSessionManager creates a new instance of the SessionManager struct.
-func NewSessionManager(database *DatabaseManager) *SessionManager {
+func NewSessionManager(database *DbManager) *SessionManager {
 	sessionManager := scs.New()
 	sessionManager.Store = postgresstore.New(database.DB)
 	return &SessionManager{Database: database, Manager: sessionManager}

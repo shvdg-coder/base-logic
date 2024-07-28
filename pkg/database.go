@@ -2,51 +2,100 @@ package pkg
 
 import (
 	"database/sql"
+	_ "github.com/lib/pq"
 	"log"
 	"time"
 )
 
-// DatabaseManager represents a manger of the database connection.
-type DatabaseManager struct {
-	DB *sql.DB
+type DbManagerOption func(*DbManager)
+
+// DbManager represents a manger of the database connection.
+type DbManager struct {
+	DriverName, URL string
+	*sql.DB
+	IsMonitoringEnabled bool
 }
 
-// NewDatabaseManager creates a new instance of DatabaseManager.
-func NewDatabaseManager(driverName string, URL string) *DatabaseManager {
+// NewDbManager creates a new instance of DbManager.
+func NewDbManager(driverName, URL string, options ...DbManagerOption) *DbManager {
 	validateDriver(driverName)
-
-	manager := &DatabaseManager{}
-	manager.Connect(driverName, URL)
-	go manager.ConnectionMonitor(driverName, URL)
-
-	return manager
+	dbm := &DbManager{
+		DriverName: driverName,
+		URL:        URL,
+	}
+	for _, option := range options {
+		option(dbm)
+	}
+	return dbm
 }
 
-// validateDriver checks if the given driverName is "postgres"
+// validateDriver checks if the given DriverName is "postgres"
 func validateDriver(driverName string) {
 	if driverName != "postgres" {
 		log.Fatalf("Invalid driver; only 'postgres' is supported. Received: %s", driverName)
 	}
 }
 
-// Connect establishes a connection to the database using the specified driver and URL.
-func (d *DatabaseManager) Connect(driverName, URL string) {
-	var err error
-	d.DB, err = sql.Open(driverName, URL)
-	if err != nil {
-		log.Printf("Failed to connect to database")
+// WithConnection attempts to connect with the database.
+func WithConnection() DbManagerOption {
+	return func(dbm *DbManager) {
+		dbm.Connect()
 	}
 }
 
-// ConnectionMonitor runs in a continuous loop to monitor the database connection.
-func (d *DatabaseManager) ConnectionMonitor(driverName, URL string) {
+// WithMonitoring enables the connection monitoring for the database.
+func WithMonitoring() DbManagerOption {
+	return func(dbm *DbManager) {
+		dbm.StartMonitoring()
+	}
+}
+
+// Connect establishes a connection to the database using the specified driver and URL.
+func (d *DbManager) Connect() {
+	var err error
+	d.DB, err = sql.Open(d.DriverName, d.URL)
+	if err != nil {
+		log.Printf("Failed to connect to database: %s", err.Error())
+	}
+}
+
+// StartMonitoring monitors the database connection and attempts to reconnect whenever the database is not connected.
+func (d *DbManager) StartMonitoring() {
+	d.IsMonitoringEnabled = true
 	for {
-		time.Sleep(15 * time.Second)
+		if !d.IsMonitoringEnabled {
+			break
+		}
 		err := d.DB.Ping()
 		if err != nil {
 			log.Printf("Lost connection to the database: %v", err)
 			log.Printf("Attempting to reconnect...")
-			d.Connect(driverName, URL)
+			d.Connect()
 		}
+		time.Sleep(15 * time.Second)
+	}
+}
+
+// StopMonitoring disables the connection monitoring.
+func (d *DbManager) StopMonitoring() {
+	d.IsMonitoringEnabled = false
+}
+
+// Disconnect disconnects from the database.
+func (d *DbManager) Disconnect() {
+	d.IsMonitoringEnabled = false
+	if d.DB == nil {
+		return
+	}
+	err := d.DB.Close()
+	if err != nil {
+		log.Printf("Failed to diconnect from database: %s", err.Error())
+	}
+}
+
+// CloseRows attempts to close the rows, a failure is logged, but no error is returned, as it is safe to ignore.
+func (d *DbManager) CloseRows(rows *sql.Rows) {
+	if err := rows.Close(); err != nil {
+		log.Printf("Failed to close rows: %s", err)
 	}
 }
