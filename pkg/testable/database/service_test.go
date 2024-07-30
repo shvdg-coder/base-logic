@@ -1,4 +1,4 @@
-package testable
+package database
 
 import (
 	"testing"
@@ -6,14 +6,16 @@ import (
 
 // TestDbContainer tests whether a database container can be created and a connection established.
 func TestDbContainer(t *testing.T) {
-	db, err := NewDbContainer()
+	containerService := NewContainerService()
+	config := NewPostgresContainerConfig()
+	container, err := containerService.CreateContainer(config)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	defer db.Teardown()
+	defer container.Teardown()
 
-	err = db.Ping()
+	err = container.Ping()
 	if err != nil {
 		t.Fatal(err)
 	}

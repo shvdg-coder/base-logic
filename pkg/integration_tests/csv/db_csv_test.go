@@ -4,26 +4,30 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/shvdg-dev/base-logic/pkg"
-	"github.com/shvdg-dev/base-logic/pkg/testable"
+	"github.com/shvdg-dev/base-logic/pkg/testable/database"
 	"log"
 	"testing"
 )
 
+const compareMessageTemplate = "on row %d: [%s %s %s] from DB, [%s %s %s] from CSV"
+
 // TestInsertingCSV verifies whether the inserting of .csv files into the database works.
 func TestInsertingCSV(t *testing.T) {
-	db, err := testable.NewDbContainer()
+	dbContainerService := database.NewContainerService()
+	config := database.NewPostgresContainerConfig()
+	dbContainer, err := dbContainerService.CreateContainer(config)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	defer db.Teardown()
+	defer dbContainer.Teardown()
 
-	_, err = db.Query(createContactsTableQuery)
+	_, err = dbContainer.Query(createContactsTableQuery)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	err = db.InsertCSVFile(myContactsCSVPath, contactsTable, contactsFields)
+	err = dbContainer.InsertCSVFile(myContactsCSVPath, contactsTable, contactsFields)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -33,7 +37,7 @@ func TestInsertingCSV(t *testing.T) {
 		log.Fatal(err)
 	}
 
-	tableRows, err := db.Query(getContactsQuery)
+	tableRows, err := dbContainer.Query(getContactsQuery)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -59,8 +63,13 @@ func compareRows(csvRows [][]string, tableRows *sql.Rows) error {
 			return err
 		}
 
-		if id != csvRows[index][0] || name != csvRows[index][1] || phone != csvRows[index][2] {
-			return fmt.Errorf("mismatch on row %d: got [%s %s %s] from DB, [%s %s %s] from CSV", index, id, name, phone, csvRows[index][0], csvRows[index][1], csvRows[index][2])
+		match := id == csvRows[index][0] && name == csvRows[index][1] && phone == csvRows[index][2]
+		compareMessage := fmt.Sprintf(compareMessageTemplate, index, id, name, phone, csvRows[index][0], csvRows[index][1], csvRows[index][2])
+
+		if !match {
+			return fmt.Errorf("FAIL: %s", compareMessage)
+		} else {
+			log.Printf("SUCC: %s", compareMessage)
 		}
 
 		index++
