@@ -82,7 +82,7 @@ func (c *ContainerService) createURL(host, port string, config *ContainerConfig)
 	if config.Driver == "postgres" {
 		return c.createPostgresURL(host, port, config)
 	}
-	return "", errors.New(fmt.Sprintf("unsupported driver for URL creation %s: ", config.Driver))
+	return "", errors.New(fmt.Sprintf("unsupported driver for database URL creation: %s", config.Driver))
 }
 
 // createPostgresURL constructs Postgres database connection URL.
