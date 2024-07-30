@@ -11,7 +11,7 @@ import (
 
 const compareMessageTemplate = "on row %d: [%s %s %s] from DB, [%s %s %s] from CSV"
 
-// TestInsertingCSV verifies whether the inserting of .csv files into the database works.
+// TestInsertingCSV verifies whether a .csv file can be inserted into the database.
 func TestInsertingCSV(t *testing.T) {
 	dbContainerService := database.NewContainerService()
 	config := database.NewPostgresContainerConfig()

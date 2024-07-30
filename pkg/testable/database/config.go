@@ -1,5 +1,6 @@
 package database
 
+// ContainerConfig holds data used for spinning up a database container.
 type ContainerConfig struct {
 	Driver   string
 	Image    string
@@ -13,7 +14,7 @@ type ContainerConfig struct {
 	Env map[string]string
 }
 
-// NewPostgresContainerConfig creates a default configuration for a Postgres database container.
+// NewPostgresContainerConfig creates a default ContainerConfig for a Postgres database container.
 func NewPostgresContainerConfig() *ContainerConfig {
 	config := &ContainerConfig{
 		Driver:   "postgres",
