@@ -9,7 +9,7 @@ import (
 // Container is used to spin up a database in a container for integration testing.
 type Container struct {
 	tstcon.Container
-	*pkg.DbManager
+	pkg.DbOperations
 }
 
 // Teardown destroys the database container.

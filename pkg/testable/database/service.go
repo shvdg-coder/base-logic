@@ -53,8 +53,8 @@ func (c *ContainerService) CreateContainer(config *ContainerConfig) (*Container,
 	dbm := pkg.NewDbManager(config.Driver, url, pkg.WithConnection())
 
 	return &Container{
-		Container: container,
-		DbManager: dbm,
+		Container:    container,
+		DbOperations: dbm,
 	}, nil
 }
 

@@ -21,6 +21,7 @@ type DbOperations interface {
 	InsertCSVFile(filePath, table string, fields []string) error
 	Query(query string, args ...interface{}) (*sql.Rows, error)
 	Exec(query string, args ...interface{}) (sql.Result, error)
+	Ping() error
 }
 
 // DbManager represents a manger of the database connection.
