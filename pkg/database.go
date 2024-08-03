@@ -9,17 +9,29 @@ import (
 	"time"
 )
 
+// DbManagerOption is used to instantiate a DbManager with the provided settings/configurations/actions.
 type DbManagerOption func(*DbManager)
+
+// DbOperations represents operations related to database actions
+type DbOperations interface {
+	Connect()
+	Disconnect()
+	StartMonitoring()
+	StopMonitoring()
+	InsertCSVFile(filePath, table string, fields []string) error
+	Query(query string, args ...interface{}) (*sql.Rows, error)
+	Exec(query string, args ...interface{}) (sql.Result, error)
+}
 
 // DbManager represents a manger of the database connection.
 type DbManager struct {
-	DriverName, URL string
-	*sql.DB
+	DriverName, URL     string
 	IsMonitoringEnabled bool
+	*sql.DB
 }
 
 // NewDbManager creates a new instance of DbManager.
-func NewDbManager(driverName, URL string, options ...DbManagerOption) *DbManager {
+func NewDbManager(driverName, URL string, options ...DbManagerOption) DbOperations {
 	validateDriver(driverName)
 	dbm := &DbManager{
 		DriverName: driverName,
@@ -61,6 +73,18 @@ func (d *DbManager) Connect() {
 	}
 }
 
+// Disconnect disconnects from the database.
+func (d *DbManager) Disconnect() {
+	d.IsMonitoringEnabled = false
+	if d.DB == nil {
+		return
+	}
+	err := d.DB.Close()
+	if err != nil {
+		log.Printf("Failed to diconnect from database: %s", err.Error())
+	}
+}
+
 // StartMonitoring monitors the database connection and attempts to reconnect whenever the database is not connected.
 func (d *DbManager) StartMonitoring() {
 	d.IsMonitoringEnabled = true
@@ -68,7 +92,7 @@ func (d *DbManager) StartMonitoring() {
 		if !d.IsMonitoringEnabled {
 			break
 		}
-		err := d.DB.Ping()
+		err := d.Ping()
 		if err != nil {
 			log.Printf("Lost connection to the database: %v", err)
 			log.Printf("Attempting to reconnect...")
@@ -83,32 +107,12 @@ func (d *DbManager) StopMonitoring() {
 	d.IsMonitoringEnabled = false
 }
 
-// Disconnect disconnects from the database.
-func (d *DbManager) Disconnect() {
-	d.IsMonitoringEnabled = false
-	if d.DB == nil {
-		return
-	}
-	err := d.DB.Close()
-	if err != nil {
-		log.Printf("Failed to diconnect from database: %s", err.Error())
-	}
-}
-
-// CloseRows attempts to close the rows, a failure is logged, but no error is returned, as it is safe to ignore.
-func (d *DbManager) CloseRows(rows *sql.Rows) {
-	if err := rows.Close(); err != nil {
-		log.Printf("Failed to close rows: %s", err)
-	}
-}
-
 // InsertCSVFile is the main function that coordinates opening the file and inserting the records to the database
 func (d *DbManager) InsertCSVFile(filePath, table string, fields []string) error {
 	records, err := GetCSVRecords(filePath)
 	if err != nil {
 		return err
 	}
-
 	return d.InsertCSVRecords(table, fields, records)
 }
 
