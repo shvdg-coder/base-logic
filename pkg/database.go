@@ -19,8 +19,10 @@ type DbOperations interface {
 	StartMonitoring()
 	StopMonitoring()
 	InsertCSVFile(filePath, table string, fields []string) error
-	Query(query string, args ...interface{}) (*sql.Rows, error)
+
 	Exec(query string, args ...interface{}) (sql.Result, error)
+	Query(query string, args ...interface{}) (*sql.Rows, error)
+	QueryRow(query string, args ...interface{}) *sql.Row
 	Ping() error
 }
 
