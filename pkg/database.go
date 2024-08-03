@@ -9,8 +9,8 @@ import (
 	"time"
 )
 
-// DbManagerOption is used to instantiate a DbManager with the provided settings/configurations/actions.
-type DbManagerOption func(*DbManager)
+// DbManagerOption is used to instantiate a DbService with the provided settings/configurations/actions.
+type DbManagerOption func(*DbService)
 
 // DbOperations represents operations related to database actions
 type DbOperations interface {
@@ -26,17 +26,17 @@ type DbOperations interface {
 	Ping() error
 }
 
-// DbManager represents a manger of the database connection.
-type DbManager struct {
+// DbService represents a manger of the database connection.
+type DbService struct {
 	DriverName, URL     string
 	IsMonitoringEnabled bool
 	*sql.DB
 }
 
-// NewDbManager creates a new instance of DbManager.
-func NewDbManager(driverName, URL string, options ...DbManagerOption) DbOperations {
+// NewDbService creates a new instance of DbService.
+func NewDbService(driverName, URL string, options ...DbManagerOption) DbOperations {
 	validateDriver(driverName)
-	dbm := &DbManager{
+	dbm := &DbService{
 		DriverName: driverName,
 		URL:        URL,
 	}
@@ -55,20 +55,20 @@ func validateDriver(driverName string) {
 
 // WithConnection attempts to connect with the database.
 func WithConnection() DbManagerOption {
-	return func(dbm *DbManager) {
+	return func(dbm *DbService) {
 		dbm.Connect()
 	}
 }
 
 // WithMonitoring enables the connection monitoring for the database.
 func WithMonitoring() DbManagerOption {
-	return func(dbm *DbManager) {
+	return func(dbm *DbService) {
 		dbm.StartMonitoring()
 	}
 }
 
 // Connect establishes a connection to the database using the specified driver and URL.
-func (d *DbManager) Connect() {
+func (d *DbService) Connect() {
 	var err error
 	d.DB, err = sql.Open(d.DriverName, d.URL)
 	if err != nil {
@@ -77,7 +77,7 @@ func (d *DbManager) Connect() {
 }
 
 // Disconnect disconnects from the database.
-func (d *DbManager) Disconnect() {
+func (d *DbService) Disconnect() {
 	d.IsMonitoringEnabled = false
 	if d.DB == nil {
 		return
@@ -89,7 +89,7 @@ func (d *DbManager) Disconnect() {
 }
 
 // StartMonitoring monitors the database connection and attempts to reconnect whenever the database is not connected.
-func (d *DbManager) StartMonitoring() {
+func (d *DbService) StartMonitoring() {
 	d.IsMonitoringEnabled = true
 	for {
 		if !d.IsMonitoringEnabled {
@@ -106,21 +106,21 @@ func (d *DbManager) StartMonitoring() {
 }
 
 // StopMonitoring disables the connection monitoring.
-func (d *DbManager) StopMonitoring() {
+func (d *DbService) StopMonitoring() {
 	d.IsMonitoringEnabled = false
 }
 
 // InsertCSVFile is the main function that coordinates opening the file and inserting the records to the database
-func (d *DbManager) InsertCSVFile(filePath, table string, fields []string) error {
+func (d *DbService) InsertCSVFile(filePath, table string, fields []string) error {
 	records, err := GetCSVRecords(filePath)
 	if err != nil {
 		return err
 	}
-	return d.InsertCSVRecords(table, fields, records)
+	return d.insertCSVRecords(table, fields, records)
 }
 
-// InsertCSVRecords inserts the contents of a .csv file into the database.
-func (d *DbManager) InsertCSVRecords(table string, fields []string, records [][]string) error {
+// insertCSVRecords inserts the contents of a .csv file into the database.
+func (d *DbService) insertCSVRecords(table string, fields []string, records [][]string) error {
 	transaction, err := d.Begin()
 	if err != nil {
 		return fmt.Errorf("unable to start transaction: %s", err.Error())

@@ -10,23 +10,23 @@ import (
 	"github.com/testcontainers/testcontainers-go/wait"
 )
 
-// ContainerOperations represents the operations regarding container management.
-type ContainerOperations interface {
-	CreateContainer(config *ContainerConfig) (*Container, error)
+// ContainerManagement represents the actions regarding container management.
+type ContainerManagement interface {
+	CreateContainer(config *ContainerConfig) (ContainerOperations, error)
 }
 
 // ContainerService is responsible for managing containers.
 type ContainerService struct {
-	ContainerOperations
+	ContainerManagement
 }
 
 // NewContainerService instantiates a new ContainerService.
-func NewContainerService() ContainerOperations {
+func NewContainerService() ContainerManagement {
 	return &ContainerService{}
 }
 
 // CreateContainer creates a new instance of Container.
-func (c *ContainerService) CreateContainer(config *ContainerConfig) (*Container, error) {
+func (c *ContainerService) CreateContainer(config *ContainerConfig) (ContainerOperations, error) {
 	ctx := context.Background()
 
 	request := c.newContainerRequest(config)
@@ -50,12 +50,10 @@ func (c *ContainerService) CreateContainer(config *ContainerConfig) (*Container,
 		return nil, err
 	}
 
-	dbm := pkg.NewDbManager(config.Driver, url, pkg.WithConnection())
+	dbs := pkg.NewDbService(config.Driver, url, pkg.WithConnection())
+	dbContainer := NewContainer(container, dbs)
 
-	return &Container{
-		Container:    container,
-		DbOperations: dbm,
-	}, nil
+	return dbContainer, nil
 }
 
 // newContainerRequest instantiates a new request for a container.
