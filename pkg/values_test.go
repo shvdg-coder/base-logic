@@ -26,7 +26,7 @@ func TestStringsToUUIDs(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_, err := stringsToUUIDs(tt.strings...)
+			_, err := StringsToUUIDs(tt.strings...)
 			assert.Equal(t, tt.expectedErr, err != nil)
 		})
 	}

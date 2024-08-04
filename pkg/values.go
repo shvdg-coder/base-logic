@@ -5,11 +5,11 @@ import (
 	"github.com/google/uuid"
 )
 
-// stringsToUUIDs function maps each string to a UUID.
-func stringsToUUIDs(strings ...string) ([]uuid.UUID, error) {
+// StringsToUUIDs function maps each string to a UUID.
+func StringsToUUIDs(strings ...string) ([]uuid.UUID, error) {
 	uuids := make([]uuid.UUID, len(strings))
 	for i, s := range strings {
-		u, err := stringToUUID(s)
+		u, err := StringToUUID(s)
 		if err != nil {
 			return nil, err
 		}
@@ -18,8 +18,8 @@ func stringsToUUIDs(strings ...string) ([]uuid.UUID, error) {
 	return uuids, nil
 }
 
-// stringToUUID function creates a UUID from a string.
-func stringToUUID(str string) (uuid.UUID, error) {
+// StringToUUID function creates a UUID from a string.
+func StringToUUID(str string) (uuid.UUID, error) {
 	id, err := uuid.Parse(str)
 	if err != nil {
 		return uuid.Nil, fmt.Errorf("failed to parse UUID: %w", err)
