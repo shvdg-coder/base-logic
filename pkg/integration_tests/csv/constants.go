@@ -1,6 +1,10 @@
 package csv
 
-const myContactsCSVPath = "./my_contacts.csv"
-const contactsTable = "contacts"
+// Contacts
+const contactsCSVPath = "./resources/contacts.csv"
+const contactsTableName = "contacts"
+const contactsColumnID = "id"
+const contactsColumnName = "name"
+const contactsColumnPhone = "phone"
 
-var contactsFields = []string{"id", "name", "phone"}
+var nameColumns = []string{contactsColumnID, contactsColumnName, contactsColumnPhone}

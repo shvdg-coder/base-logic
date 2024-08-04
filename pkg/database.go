@@ -112,7 +112,7 @@ func (d *DbService) StopMonitoring() {
 
 // InsertCSVFile is the main function that coordinates opening the file and inserting the records to the database
 func (d *DbService) InsertCSVFile(filePath, table string, fields []string) error {
-	records, err := GetCSVRecords(filePath)
+	records, err := GetCSVRecords(filePath, false)
 	if err != nil {
 		return err
 	}
