@@ -2,7 +2,7 @@ package database
 
 import (
 	"context"
-	"github.com/shvdg-dev/base-logic/pkg"
+	"github.com/shvdg-coder/base-logic/pkg"
 	tstcon "github.com/testcontainers/testcontainers-go"
 )
 

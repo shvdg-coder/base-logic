@@ -1,7 +1,7 @@
 package csv
 
 import (
-	"github.com/shvdg-dev/base-logic/pkg"
+	"github.com/shvdg-coder/base-logic/pkg"
 	"testing"
 )
 

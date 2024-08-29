@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/docker/go-connections/nat"
-	"github.com/shvdg-dev/base-logic/pkg"
+	"github.com/shvdg-coder/base-logic/pkg"
 	tstcon "github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
 )

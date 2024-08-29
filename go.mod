@@ -1,4 +1,4 @@
-module github.com/shvdg-dev/base-logic
+module github.com/shvdg-coder/base-logic
 
 go 1.22.2
 
