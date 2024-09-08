@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-// Test retrieving the values of a colum for a .csv
+// TestGetValueFromColumnsOfCSV verifies whether values from column can be retrieved of a .csv file.
 func TestGetValueFromColumnsOfCSV(t *testing.T) {
 	tests := []struct {
 		columnIndex int
@@ -21,13 +21,16 @@ func TestGetValueFromColumnsOfCSV(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
+
 			columnValues, err := pkg.GetCSVColumnValues(contactsCSVPath, tt.columnName)
 			if err != nil {
 				t.Fatal(err)
 			}
+
 			if len(records) != len(columnValues) {
 				t.Fatalf("expected %d values, got %d", len(records), len(columnValues))
 			}
+
 			for i, record := range records {
 				if record[tt.columnIndex] != columnValues[i] {
 					t.Fatalf("expected %s, got %s", columnValues[i], record[tt.columnIndex])

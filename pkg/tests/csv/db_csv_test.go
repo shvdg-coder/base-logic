@@ -11,6 +11,12 @@ func TestInsertingCSV(t *testing.T) {
 	dbContainer := setup(t)
 	defer dbContainer.Teardown()
 
+	// Execute
+	err := dbContainer.InsertCSVFile(contactsCSVPath, contactsTableName, columnNames)
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	// Retrieve the rows in the CSV file
 	csvRows, err := pkg.GetCSVRecords(contactsCSVPath, false)
 	if err != nil {
@@ -25,15 +31,16 @@ func TestInsertingCSV(t *testing.T) {
 
 	defer tableRows.Close()
 
+	if err = tableRows.Err(); err != nil {
+		t.Fatal(err)
+	}
+
 	// Test
 	err = pkg.CompareRows(csvRows, tableRows)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if err = tableRows.Err(); err != nil {
-		t.Fatal(err)
-	}
 }
 
 // setup prepares the tests by performing the minimally required steps.
@@ -48,12 +55,6 @@ func setup(t *testing.T) database.ContainerOperations {
 
 	// Create table
 	_, err = dbContainer.Query(createContactsTableQuery)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	// Insert data
-	err = dbContainer.InsertCSVFile(contactsCSVPath, contactsTableName, nameColumns)
 	if err != nil {
 		t.Fatal(err)
 	}

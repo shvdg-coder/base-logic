@@ -7,4 +7,4 @@ const contactsColumnID = "id"
 const contactsColumnName = "name"
 const contactsColumnPhone = "phone"
 
-var nameColumns = []string{contactsColumnID, contactsColumnName, contactsColumnPhone}
+var columnNames = []string{contactsColumnID, contactsColumnName, contactsColumnPhone}
