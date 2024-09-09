@@ -30,11 +30,12 @@ type DbOperations interface {
 type DbService struct {
 	DriverName, URL     string
 	IsMonitoringEnabled bool
+	SSHTunnel           *SSHTunnel
 	*sql.DB
 }
 
 // NewDbService creates a new instance of DbService.
-func NewDbService(driverName, URL string, options ...DbManagerOption) DbOperations {
+func NewDbService(driverName, URL string, options ...DbManagerOption) *DbService {
 	validateDriver(driverName)
 	dbm := &DbService{
 		DriverName: driverName,
@@ -50,6 +51,17 @@ func NewDbService(driverName, URL string, options ...DbManagerOption) DbOperatio
 func validateDriver(driverName string) {
 	if driverName != "postgres" {
 		log.Fatalf("Invalid driver; only 'postgres' is supported. Received: %s", driverName)
+	}
+}
+
+// WithSSH establishes an SSH tunnel for connecting to the database.
+func WithSSH(config *SSHConfig) DbManagerOption {
+	return func(db *DbService) {
+		sshTunnel, err := NewSSHTunnel(config)
+		if err != nil {
+			log.Printf("Unable to establish SSH tunnel: %s", err.Error())
+		}
+		db.SSHTunnel = sshTunnel
 	}
 }
 
