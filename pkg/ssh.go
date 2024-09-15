@@ -32,6 +32,7 @@ func NewSSHTunnel(config *SSHConfig) (*SSHTunnel, error) {
 		config.Destination,
 		config.LocalPort,
 	)
+
 	if err != nil {
 		log.Printf(fmt.Sprintf("Failed to create SSH Tunnel: %s", err.Error()))
 		return nil, err

@@ -6,6 +6,8 @@ import (
 	"github.com/lib/pq"
 	_ "github.com/lib/pq"
 	"log"
+	"strconv"
+	"strings"
 	"time"
 )
 
@@ -81,14 +83,21 @@ func WithMonitoring() DbManagerOption {
 
 // Connect establishes a connection to the database using the specified driver and URL.
 func (d *DbService) Connect() {
+	dbURL := d.URL
 	if d.SSHTunnel != nil {
 		d.SSHTunnel.Start()
+		dbURL = strings.Replace(dbURL, "<PORT>", strconv.Itoa(d.SSHTunnel.Local.Port), 1)
 	}
 
 	var err error
-	d.DB, err = sql.Open(d.DriverName, d.URL)
+	d.DB, err = sql.Open(d.DriverName, dbURL)
 	if err != nil {
 		log.Printf("Failed to connect to database: %s", err.Error())
+	}
+
+	err = d.Ping()
+	if err != nil {
+		log.Printf("Failed to reach database: %s", err.Error())
 	}
 }
 
