@@ -20,7 +20,7 @@ func TestStartTunnel(t *testing.T) {
 	// Try to connect to the database
 	dbService := pkg.NewDbService("postgres",
 		pkg.GetEnvValueAsString(databaseURL),
-		pkg.WithSSH(sshConfig),
+		pkg.WithSSHTunnel(sshConfig),
 		pkg.WithConnection())
 	defer dbService.Disconnect()
 

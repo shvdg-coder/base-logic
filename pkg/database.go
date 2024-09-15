@@ -54,33 +54,37 @@ func validateDriver(driverName string) {
 	}
 }
 
-// WithSSH establishes an SSH tunnel for connecting to the database.
-func WithSSH(config *SSHConfig) DbManagerOption {
-	return func(db *DbService) {
+// WithSSHTunnel establishes an SSH tunnel for connecting to the database.
+func WithSSHTunnel(config *SSHConfig) DbManagerOption {
+	return func(dbs *DbService) {
 		sshTunnel, err := NewSSHTunnel(config)
 		if err != nil {
 			log.Printf("Unable to establish SSH tunnel: %s", err.Error())
 		}
-		db.SSHTunnel = sshTunnel
+		dbs.SSHTunnel = sshTunnel
 	}
 }
 
 // WithConnection attempts to connect with the database.
 func WithConnection() DbManagerOption {
-	return func(dbm *DbService) {
-		dbm.Connect()
+	return func(dbs *DbService) {
+		dbs.Connect()
 	}
 }
 
 // WithMonitoring enables the connection monitoring for the database.
 func WithMonitoring() DbManagerOption {
-	return func(dbm *DbService) {
-		dbm.StartMonitoring()
+	return func(dbs *DbService) {
+		dbs.StartMonitoring()
 	}
 }
 
 // Connect establishes a connection to the database using the specified driver and URL.
 func (d *DbService) Connect() {
+	if d.SSHTunnel != nil {
+		d.SSHTunnel.Start()
+	}
+
 	var err error
 	d.DB, err = sql.Open(d.DriverName, d.URL)
 	if err != nil {
@@ -94,9 +98,14 @@ func (d *DbService) Disconnect() {
 	if d.DB == nil {
 		return
 	}
+
 	err := d.DB.Close()
 	if err != nil {
 		log.Printf("Failed to diconnect from database: %s", err.Error())
+	}
+
+	if d.SSHTunnel != nil {
+		d.SSHTunnel.Close()
 	}
 }
 
