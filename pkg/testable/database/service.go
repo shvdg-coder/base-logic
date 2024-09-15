@@ -21,12 +21,12 @@ type ContainerService struct {
 }
 
 // NewContainerService instantiates a new ContainerService.
-func NewContainerService() ContainerManagement {
+func NewContainerService() *ContainerService {
 	return &ContainerService{}
 }
 
 // CreateContainer creates a new instance of Container.
-func (c *ContainerService) CreateContainer(config *ContainerConfig) (ContainerOperations, error) {
+func (c *ContainerService) CreateContainer(config *ContainerConfig) (*Container, error) {
 	ctx := context.Background()
 
 	request := c.newContainerRequest(config)

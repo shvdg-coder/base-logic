@@ -24,7 +24,7 @@ type Container struct {
 }
 
 // NewContainer creates a new instance of Container.
-func NewContainer(container tstcon.Container, database pkg.DbOperations) ContainerOperations {
+func NewContainer(container tstcon.Container, database pkg.DbOperations) *Container {
 	return &Container{
 		ContainerWrapper: ContainerWrapper{Container: container},
 		DbOperations:     database,
