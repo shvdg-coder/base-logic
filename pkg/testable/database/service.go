@@ -12,7 +12,7 @@ import (
 
 // ContainerManagement represents the actions regarding container management.
 type ContainerManagement interface {
-	CreateContainer(config *ContainerConfig) (ContainerOperations, error)
+	CreateContainer(config *ContainerConfig) (*Container, error)
 }
 
 // ContainerService is responsible for managing containers.
