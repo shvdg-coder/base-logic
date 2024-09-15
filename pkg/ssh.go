@@ -10,11 +10,11 @@ import (
 
 // SSHConfig holds data to create a SSH Tunnel.
 type SSHConfig struct {
-	User        string
-	Password    string
-	Server      string
-	Destination string
-	LocalPort   string
+	User        string `json:"user"`
+	Password    string `json:"password"`
+	Server      string `json:"server"`
+	Destination string `json:"destination"`
+	LocalPort   string `json:"local_port"`
 }
 
 // SSHTunnel is helps with creating an SSH Tunnel.
