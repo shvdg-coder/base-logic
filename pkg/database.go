@@ -11,21 +11,17 @@ import (
 	"time"
 )
 
-// DbManagerOption is used to instantiate a DbService with the provided settings/configurations/actions.
-type DbManagerOption func(*DbService)
+// DbSvcOption is used to instantiate a DbService with the provided settings/configurations/actions.
+type DbSvcOption func(*DbService)
 
-// DbOperations represents operations related to database actions
-type DbOperations interface {
+// DbOps represents operations related to database actions
+type DbOps interface {
 	Connect()
 	Disconnect()
 	StartMonitoring()
 	StopMonitoring()
 	InsertCSVFile(filePath, table string, fields []string) error
-
-	Exec(query string, args ...interface{}) (sql.Result, error)
-	Query(query string, args ...interface{}) (*sql.Rows, error)
-	QueryRow(query string, args ...interface{}) *sql.Row
-	Ping() error
+	DB() *sql.DB
 }
 
 // DbService represents a manger of the database connection.
@@ -33,11 +29,11 @@ type DbService struct {
 	DriverName, URL     string
 	IsMonitoringEnabled bool
 	SSHTunnel           *SSHTunnel
-	*sql.DB
+	db                  *sql.DB
 }
 
 // NewDbService creates a new instance of DbService.
-func NewDbService(driverName, URL string, options ...DbManagerOption) *DbService {
+func NewDbService(driverName, URL string, options ...DbSvcOption) *DbService {
 	validateDriver(driverName)
 	dbm := &DbService{
 		DriverName: driverName,
@@ -56,8 +52,13 @@ func validateDriver(driverName string) {
 	}
 }
 
+// DB returns the underlying *sql.DB instance used for the database connection.
+func (d *DbService) DB() *sql.DB {
+	return d.db
+}
+
 // WithSSHTunnel establishes an SSH tunnel for connecting to the database.
-func WithSSHTunnel(config *SSHConfig) DbManagerOption {
+func WithSSHTunnel(config *SSHConfig) DbSvcOption {
 	return func(dbs *DbService) {
 		sshTunnel, err := NewSSHTunnel(config)
 		if err != nil {
@@ -68,14 +69,14 @@ func WithSSHTunnel(config *SSHConfig) DbManagerOption {
 }
 
 // WithConnection attempts to connect with the database.
-func WithConnection() DbManagerOption {
+func WithConnection() DbSvcOption {
 	return func(dbs *DbService) {
 		dbs.Connect()
 	}
 }
 
 // WithMonitoring enables the connection monitoring for the database.
-func WithMonitoring() DbManagerOption {
+func WithMonitoring() DbSvcOption {
 	return func(dbs *DbService) {
 		dbs.StartMonitoring()
 	}
@@ -90,12 +91,12 @@ func (d *DbService) Connect() {
 	}
 
 	var err error
-	d.DB, err = sql.Open(d.DriverName, dbURL)
+	d.db, err = sql.Open(d.DriverName, dbURL)
 	if err != nil {
 		log.Printf("Failed to connect to database: %s", err.Error())
 	}
 
-	err = d.Ping()
+	err = d.DB().Ping()
 	if err != nil {
 		log.Printf("Failed to reach database: %s", err.Error())
 	}
@@ -104,11 +105,11 @@ func (d *DbService) Connect() {
 // Disconnect disconnects from the database.
 func (d *DbService) Disconnect() {
 	d.IsMonitoringEnabled = false
-	if d.DB == nil {
+	if d.db == nil {
 		return
 	}
 
-	err := d.DB.Close()
+	err := d.DB().Close()
 	if err != nil {
 		log.Printf("Failed to diconnect from database: %s", err.Error())
 	}
@@ -125,7 +126,7 @@ func (d *DbService) StartMonitoring() {
 		if !d.IsMonitoringEnabled {
 			break
 		}
-		err := d.Ping()
+		err := d.DB().Ping()
 		if err != nil {
 			log.Printf("Lost connection to the database: %v", err)
 			log.Printf("Attempting to reconnect...")
@@ -151,7 +152,7 @@ func (d *DbService) InsertCSVFile(filePath, table string, fields []string) error
 
 // insertCSVRecords inserts the contents of a .csv file into the database.
 func (d *DbService) insertCSVRecords(table string, fields []string, records [][]string) error {
-	transaction, err := d.Begin()
+	transaction, err := d.DB().Begin()
 	if err != nil {
 		return fmt.Errorf("unable to start transaction: %s", err.Error())
 	}

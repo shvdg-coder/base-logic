@@ -15,7 +15,7 @@ type SessionManager struct {
 // NewSessionManager creates a new instance of the SessionManager struct.
 func NewSessionManager(database *DbService) *SessionManager {
 	sessionManager := scs.New()
-	sessionManager.Store = postgresstore.New(database.DB)
+	sessionManager.Store = postgresstore.New(database.DB())
 	return &SessionManager{Database: database, Manager: sessionManager}
 }
 

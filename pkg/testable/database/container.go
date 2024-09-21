@@ -8,7 +8,7 @@ import (
 
 // ContainerOperations represents operations related to a database container.
 type ContainerOperations interface {
-	pkg.DbOperations
+	pkg.DbOps
 	Teardown() error
 }
 
@@ -20,14 +20,14 @@ type ContainerWrapper struct {
 // Container represents a database container, which can do both container and database actions.
 type Container struct {
 	ContainerWrapper
-	pkg.DbOperations
+	pkg.DbOps
 }
 
 // NewContainer creates a new instance of Container.
-func NewContainer(container tstcon.Container, database pkg.DbOperations) *Container {
+func NewContainer(container tstcon.Container, database pkg.DbOps) *Container {
 	return &Container{
 		ContainerWrapper: ContainerWrapper{Container: container},
-		DbOperations:     database,
+		DbOps:            database,
 	}
 }
 

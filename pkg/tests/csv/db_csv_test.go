@@ -24,7 +24,7 @@ func TestInsertingCSV(t *testing.T) {
 	}
 
 	// Retrieve the rows in the table
-	tableRows, err := dbContainer.Query(getContactsQuery)
+	tableRows, err := dbContainer.DB().Query(getContactsQuery)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -54,7 +54,7 @@ func setup(t *testing.T) database.ContainerOperations {
 	}
 
 	// Create table
-	_, err = dbContainer.Query(createContactsTableQuery)
+	_, err = dbContainer.DB().Query(createContactsTableQuery)
 	if err != nil {
 		t.Fatal(err)
 	}
