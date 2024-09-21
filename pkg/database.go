@@ -21,6 +21,7 @@ type DbOps interface {
 	StartMonitoring()
 	StopMonitoring()
 	InsertCSVFile(filePath, table string, fields []string) error
+	BulkInsert(table string, fields []string, data [][]interface{}) error
 	DB() *sql.DB
 }
 
