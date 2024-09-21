@@ -182,3 +182,35 @@ func (d *DbSvc) insertCSVRecords(table string, fields []string, records [][]stri
 
 	return nil
 }
+
+// BulkInsert helps inserting data in bulk.
+func (d *DbSvc) BulkInsert(table string, fields []string, data [][]interface{}) error {
+	txn, err := d.DB().Begin()
+	if err != nil {
+		return fmt.Errorf("failed starting transaction: %w", err)
+	}
+
+	stmt, err := txn.Prepare(pq.CopyIn(table, fields...))
+	if err != nil {
+		return fmt.Errorf("failed preparing statement: %w", err)
+	}
+
+	for _, row := range data {
+		_, err := stmt.Exec(row...)
+		if err != nil {
+			return fmt.Errorf("failed executing statement: %w", err)
+		}
+	}
+
+	err = stmt.Close()
+	if err != nil {
+		return fmt.Errorf("failed closing statement: %w", err)
+	}
+
+	err = txn.Commit()
+	if err != nil {
+		return fmt.Errorf("failed committing transaction: %w", err)
+	}
+
+	return nil
+}
