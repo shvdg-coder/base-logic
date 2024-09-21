@@ -44,9 +44,9 @@ func TestInsertingCSV(t *testing.T) {
 }
 
 // setup prepares the tests by performing the minimally required steps.
-func setup(t *testing.T) database.ContainerOperations {
+func setup(t *testing.T) database.ContainerOps {
 	// Instantiate a database container
-	dbContainerService := database.NewContainerService()
+	dbContainerService := database.NewContainerSvc()
 	config := database.NewPostgresContainerConfig()
 	dbContainer, err := dbContainerService.CreateContainer(config)
 	if err != nil {

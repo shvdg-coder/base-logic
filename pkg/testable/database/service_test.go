@@ -6,7 +6,7 @@ import (
 
 // TestDbContainer tests whether a database container can be created and a connection established.
 func TestDbContainer(t *testing.T) {
-	dbContainerService := NewContainerService()
+	dbContainerService := NewContainerSvc()
 	config := NewPostgresContainerConfig()
 	dbContainer, err := dbContainerService.CreateContainer(config)
 	if err != nil {
@@ -15,7 +15,7 @@ func TestDbContainer(t *testing.T) {
 
 	defer dbContainer.Teardown()
 
-	err = dbContainer.Ping()
+	err = dbContainer.DB().Ping()
 	if err != nil {
 		t.Fatal(err)
 	}

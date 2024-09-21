@@ -15,18 +15,18 @@ type ContainerManagement interface {
 	CreateContainer(config *ContainerConfig) (*Container, error)
 }
 
-// ContainerService is responsible for managing containers.
-type ContainerService struct {
+// ContainerSvc is responsible for managing containers.
+type ContainerSvc struct {
 	ContainerManagement
 }
 
-// NewContainerService instantiates a new ContainerService.
-func NewContainerService() *ContainerService {
-	return &ContainerService{}
+// NewContainerSvc instantiates a new ContainerSvc.
+func NewContainerSvc() *ContainerSvc {
+	return &ContainerSvc{}
 }
 
 // CreateContainer creates a new instance of Container.
-func (c *ContainerService) CreateContainer(config *ContainerConfig) (*Container, error) {
+func (c *ContainerSvc) CreateContainer(config *ContainerConfig) (*Container, error) {
 	ctx := context.Background()
 
 	request := c.newContainerRequest(config)
@@ -50,14 +50,14 @@ func (c *ContainerService) CreateContainer(config *ContainerConfig) (*Container,
 		return nil, err
 	}
 
-	dbs := pkg.NewDbService(config.Driver, url, pkg.WithConnection())
+	dbs := pkg.NewDbSvc(config.Driver, url, pkg.WithConnection())
 	dbContainer := NewContainer(container, dbs)
 
 	return dbContainer, nil
 }
 
 // newContainerRequest instantiates a new request for a container.
-func (c *ContainerService) newContainerRequest(config *ContainerConfig) tstcon.ContainerRequest {
+func (c *ContainerSvc) newContainerRequest(config *ContainerConfig) tstcon.ContainerRequest {
 	exposedPort := config.Port + "/" + config.Protocol
 	return tstcon.ContainerRequest{
 		Image:        config.Image,
@@ -68,7 +68,7 @@ func (c *ContainerService) newContainerRequest(config *ContainerConfig) tstcon.C
 }
 
 // newContainer instantiates a new container using the provided context and request.
-func (c *ContainerService) newContainer(ctx context.Context, request tstcon.ContainerRequest) (tstcon.Container, error) {
+func (c *ContainerSvc) newContainer(ctx context.Context, request tstcon.ContainerRequest) (tstcon.Container, error) {
 	return tstcon.GenericContainer(ctx, tstcon.GenericContainerRequest{
 		ContainerRequest: request,
 		Started:          true,
@@ -76,7 +76,7 @@ func (c *ContainerService) newContainer(ctx context.Context, request tstcon.Cont
 }
 
 // createURL constructs the database connection URL.
-func (c *ContainerService) createURL(host, port string, config *ContainerConfig) (string, error) {
+func (c *ContainerSvc) createURL(host, port string, config *ContainerConfig) (string, error) {
 	if config.Driver == "postgres" {
 		return c.createPostgresURL(host, port, config)
 	}
@@ -84,7 +84,7 @@ func (c *ContainerService) createURL(host, port string, config *ContainerConfig)
 }
 
 // createPostgresURL constructs Postgres database connection URL.
-func (c *ContainerService) createPostgresURL(host, port string, config *ContainerConfig) (string, error) {
+func (c *ContainerSvc) createPostgresURL(host, port string, config *ContainerConfig) (string, error) {
 	return fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
 		host,
 		port,

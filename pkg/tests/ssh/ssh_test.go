@@ -18,7 +18,7 @@ func TestStartTunnel(t *testing.T) {
 	}
 
 	// Try to connect to the database
-	dbService := pkg.NewDbService(
+	dbService := pkg.NewDbSvc(
 		"postgres",
 		pkg.GetEnvValueAsString(databaseURL),
 		pkg.WithSSHTunnel(sshConfig),
@@ -26,7 +26,7 @@ func TestStartTunnel(t *testing.T) {
 	defer dbService.Disconnect()
 
 	// Test if able to ping the database
-	err := dbService.Ping()
+	err := dbService.DB().Ping()
 	if err != nil {
 		t.Fatalf("Could not ping database: %s", err.Error())
 	}

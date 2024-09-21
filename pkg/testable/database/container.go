@@ -6,8 +6,8 @@ import (
 	tstcon "github.com/testcontainers/testcontainers-go"
 )
 
-// ContainerOperations represents operations related to a database container.
-type ContainerOperations interface {
+// ContainerOps represents operations related to a database container.
+type ContainerOps interface {
 	pkg.DbOps
 	Teardown() error
 }
