@@ -71,25 +71,9 @@ func GetCSVRecords(filePath string, headers bool) ([][]string, error) {
 
 // CompareRows compares the rows from a CSV file with those from a SQL query and returns an error if they are not equal.
 func CompareRows(csvRows [][]string, tableRows *sql.Rows) error {
-	var scanResults [][]interface{}
-
-	columns, err := tableRows.Columns()
+	scanResults, err := transformTableRows(tableRows)
 	if err != nil {
-		return fmt.Errorf("failed to get columns: %v", err)
-	}
-
-	for tableRows.Next() {
-		values := make([]interface{}, len(columns))
-		valuePointers := make([]interface{}, len(columns))
-		for i := range values {
-			valuePointers[i] = &values[i]
-		}
-
-		if err := tableRows.Scan(valuePointers...); err != nil {
-			return fmt.Errorf("failed to scan row: %v", err)
-		}
-
-		scanResults = append(scanResults, values)
+		return err
 	}
 
 	if len(csvRows) != len(scanResults) {
@@ -103,6 +87,32 @@ func CompareRows(csvRows [][]string, tableRows *sql.Rows) error {
 	}
 
 	return nil
+}
+
+// transformTableRows transforms the table rows from a SQL query into a slice of rows.
+func transformTableRows(tableRows *sql.Rows) ([][]interface{}, error) {
+	var scanResults [][]interface{}
+
+	columns, err := tableRows.Columns()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get columns: %v", err)
+	}
+
+	for tableRows.Next() {
+		values := make([]interface{}, len(columns))
+		valuePointers := make([]interface{}, len(columns))
+		for i := range values {
+			valuePointers[i] = &values[i]
+		}
+
+		if err := tableRows.Scan(valuePointers...); err != nil {
+			return nil, fmt.Errorf("failed to scan row: %v", err)
+		}
+
+		scanResults = append(scanResults, values)
+	}
+
+	return scanResults, nil
 }
 
 // areRowsEqual compares a single row from the table with a single row from the CSV.
