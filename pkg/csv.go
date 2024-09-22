@@ -5,6 +5,7 @@ import (
 	"encoding/csv"
 	"fmt"
 	"os"
+	strings "strings"
 )
 
 // GetCSVColumnValues retrieves the value of the provided column name of each record in the CSV.
@@ -68,27 +69,74 @@ func GetCSVRecords(filePath string, headers bool) ([][]string, error) {
 	}
 }
 
-// CompareRows compares the rows from a .csv file with those from a query and returns an error when they are not equal.
+// CompareRows compares the rows from a CSV file with those from a SQL query and returns an error if they are not equal.
 func CompareRows(csvRows [][]string, tableRows *sql.Rows) error {
+	columns, err := tableRows.Columns()
+	if err != nil {
+		return fmt.Errorf("failed to get columns: %v", err)
+	}
+
+	values, valuePointers := make([]interface{}, len(columns)), make([]interface{}, len(columns))
+	for i := range values {
+		valuePointers[i] = &values[i]
+	}
+
 	index := 0
 	for tableRows.Next() {
-		var id, name, phone string
-		if err := tableRows.Scan(&id, &name, &phone); err != nil {
-			return err
+		if err := tableRows.Scan(valuePointers...); err != nil {
+			return fmt.Errorf("failed to scan row: %v", err)
 		}
 
-		match := id == csvRows[index][0] && name == csvRows[index][1] && phone == csvRows[index][2]
+		if index >= len(csvRows) {
+			return fmt.Errorf("the contents of CSV and table are not equal: table has more rows than CSV")
+		}
 
-		if !match {
-			compareMessage := fmt.Sprintf(
-				"row %d: [%s %s %s] from table, [%s %s %s] from CSV", index,
-				id, name, phone,
-				csvRows[index][0], csvRows[index][1], csvRows[index][2])
-
-			return fmt.Errorf("the contents of CSV and table are not equal: %s", compareMessage)
+		if err := compareRows(csvRows[index], values, columns, index); err != nil {
+			return err
 		}
 
 		index++
 	}
+
+	if index < len(csvRows) {
+		return fmt.Errorf("the contents of CSV and table are not equal: table has fewer rows than CSV")
+	}
+
 	return nil
+}
+
+// compareRows compares a single row from the table with a single row from the CSV, and throws an error if they do not match.
+func compareRows(csvRow []string, tableRow []interface{}, columns []string, rowIndex int) error {
+	rowCompare, csvCompare := make([]string, len(columns)), make([]string, len(columns))
+	match := true
+
+	for i, colVal := range tableRow {
+		val := fmt.Sprintf("%v", colVal)
+		rowCompare[i] = val
+
+		if i < len(csvRow) {
+			csvCompare[i] = csvRow[i]
+			if csvRow[i] != val {
+				match = false
+			}
+		} else {
+			match = false
+		}
+	}
+
+	if !match {
+		return createMismatchError(rowIndex, rowCompare, csvCompare)
+	}
+
+	return nil
+}
+
+// createMismatchError formats a meaningful error message for mismatched rows.
+func createMismatchError(rowIndex int, tableRow, csvRow []string) error {
+	compareMessage := fmt.Sprintf(
+		"row %d: [%s] from table, [%s] from CSV", rowIndex,
+		strings.Join(tableRow, ", "),
+		strings.Join(csvRow, ", "),
+	)
+	return fmt.Errorf("the contents of CSV and table are not equal: %s", compareMessage)
 }
