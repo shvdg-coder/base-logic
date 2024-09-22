@@ -3,6 +3,7 @@ package pkg
 import (
 	"database/sql"
 	"fmt"
+	uuid "github.com/google/uuid"
 	"github.com/lib/pq"
 	_ "github.com/lib/pq"
 	"log"
@@ -214,4 +215,49 @@ func (d *DbSvc) BulkInsert(table string, fields []string, data [][]interface{}) 
 	}
 
 	return nil
+}
+
+// ScanFunc is a function type that executes a query and scans a single row into the provided destination.
+type ScanFunc[T any] func(rows *sql.Rows) (*T, error)
+
+// BatchGet retrieves entities in batches based on the provided slice of IDs.
+func BatchGet[T any](db DbOps, batchSize int, query string, ids []uuid.UUID, scanFunc ScanFunc[T]) ([]*T, error) {
+	var entities []*T
+
+	stmt, err := db.DB().Prepare(query)
+	if err != nil {
+		return nil, fmt.Errorf("error preparing statement: %w", err)
+	}
+	defer stmt.Close()
+
+	for start := 0; start < len(ids); start += batchSize {
+		end := start + batchSize
+		if end > len(ids) {
+			end = len(ids)
+		}
+		batchIDs := ids[start:end]
+
+		rows, err := stmt.Query(pq.Array(batchIDs))
+		if err != nil {
+			return nil, fmt.Errorf("error executing query: %w", err)
+		}
+
+		for rows.Next() {
+			entity, err := scanFunc(rows)
+			if err != nil {
+				rows.Close()
+				return nil, fmt.Errorf("error scanning row: %w", err)
+			}
+			entities = append(entities, entity)
+		}
+
+		if err := rows.Err(); err != nil {
+			rows.Close()
+			return nil, fmt.Errorf("error iterating rows: %w", err)
+		}
+
+		rows.Close()
+	}
+
+	return entities, nil
 }
