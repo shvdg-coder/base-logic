@@ -230,33 +230,22 @@ func BatchGet[T any](db DbOps, batchSize int, query string, ids []uuid.UUID, sca
 	}
 	defer stmt.Close()
 
-	for start := 0; start < len(ids); start += batchSize {
-		end := start + batchSize
-		if end > len(ids) {
-			end = len(ids)
-		}
-		batchIDs := ids[start:end]
+	rows, err := stmt.Query(pq.Array(ids))
+	if err != nil {
+		return nil, fmt.Errorf("failed executing query: %w", err)
+	}
+	defer rows.Close()
 
-		rows, err := stmt.Query(pq.Array(batchIDs))
+	for rows.Next() {
+		entity, err := scanFunc(rows)
 		if err != nil {
-			return nil, fmt.Errorf("failed executing query: %w", err)
+			return nil, fmt.Errorf("failed scanning row: %w", err)
 		}
+		entities = append(entities, entity)
+	}
 
-		for rows.Next() {
-			entity, err := scanFunc(rows)
-			if err != nil {
-				rows.Close()
-				return nil, fmt.Errorf("failed scanning row: %w", err)
-			}
-			entities = append(entities, entity)
-		}
-
-		if err := rows.Err(); err != nil {
-			rows.Close()
-			return nil, fmt.Errorf("failed iterating rows: %w", err)
-		}
-
-		rows.Close()
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("failed iterating rows: %w", err)
 	}
 
 	return entities, nil
