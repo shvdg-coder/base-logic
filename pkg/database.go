@@ -3,7 +3,7 @@ package pkg
 import (
 	"database/sql"
 	"fmt"
-	uuid "github.com/google/uuid"
+	"github.com/google/uuid"
 	"github.com/lib/pq"
 	_ "github.com/lib/pq"
 	"log"
@@ -64,7 +64,7 @@ func WithSSHTunnel(config *SSHConfig) DbSvcOption {
 	return func(dbs *DbSvc) {
 		sshTunnel, err := NewSSHTunnel(config)
 		if err != nil {
-			log.Printf("Unable to establish SSH tunnel: %s", err.Error())
+			log.Printf("Failed to establish SSH tunnel: %s", err.Error())
 		}
 		dbs.SSHTunnel = sshTunnel
 	}
@@ -156,12 +156,12 @@ func (d *DbSvc) InsertCSVFile(filePath, table string, fields []string) error {
 func (d *DbSvc) insertCSVRecords(table string, fields []string, records [][]string) error {
 	transaction, err := d.DB().Begin()
 	if err != nil {
-		return fmt.Errorf("unable to start transaction: %s", err.Error())
+		return fmt.Errorf("failed to start transaction: %s", err.Error())
 	}
 
 	statement, err := transaction.Prepare(pq.CopyIn(table, fields...))
 	if err != nil {
-		return fmt.Errorf("unable to prepare statement: %s", err.Error())
+		return fmt.Errorf("failed to prepare statement: %s", err.Error())
 	}
 
 	for _, record := range records {
@@ -226,7 +226,7 @@ func BatchGet[T any](db DbOps, batchSize int, query string, ids []uuid.UUID, sca
 
 	stmt, err := db.DB().Prepare(query)
 	if err != nil {
-		return nil, fmt.Errorf("error preparing statement: %w", err)
+		return nil, fmt.Errorf("failed preparing statement: %w", err)
 	}
 	defer stmt.Close()
 
@@ -239,21 +239,21 @@ func BatchGet[T any](db DbOps, batchSize int, query string, ids []uuid.UUID, sca
 
 		rows, err := stmt.Query(pq.Array(batchIDs))
 		if err != nil {
-			return nil, fmt.Errorf("error executing query: %w", err)
+			return nil, fmt.Errorf("failed executing query: %w", err)
 		}
 
 		for rows.Next() {
 			entity, err := scanFunc(rows)
 			if err != nil {
 				rows.Close()
-				return nil, fmt.Errorf("error scanning row: %w", err)
+				return nil, fmt.Errorf("failed scanning row: %w", err)
 			}
 			entities = append(entities, entity)
 		}
 
 		if err := rows.Err(); err != nil {
 			rows.Close()
-			return nil, fmt.Errorf("error iterating rows: %w", err)
+			return nil, fmt.Errorf("failed iterating rows: %w", err)
 		}
 
 		rows.Close()
