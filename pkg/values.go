@@ -3,6 +3,7 @@ package pkg
 import (
 	"fmt"
 	"github.com/google/uuid"
+	"reflect"
 )
 
 // StringsToUUIDs function maps each string to a UUID.
@@ -46,4 +47,26 @@ func UUIDToString(id uuid.UUID) (string, error) {
 		return "", fmt.Errorf("UUID is nil")
 	}
 	return id.String(), nil
+}
+
+// GetFields returns a slice of interfaces containing values of any struct.
+func GetFields(s interface{}) []interface{} {
+	v := reflect.ValueOf(s).Elem()
+	values := make([]interface{}, v.NumField())
+
+	for i := 0; i < v.NumField(); i++ {
+		values[i] = v.Field(i).Interface()
+	}
+	return values
+}
+
+// GetFieldNames returns the field names of any struct.
+func GetFieldNames(s interface{}) []string {
+	t := reflect.TypeOf(s).Elem()
+	fieldNames := make([]string, t.NumField())
+
+	for i := 0; i < t.NumField(); i++ {
+		fieldNames[i] = t.Field(i).Tag.Get("db")
+	}
+	return fieldNames
 }
