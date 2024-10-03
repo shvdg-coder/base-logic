@@ -62,7 +62,7 @@ func GetFields(s interface{}) []interface{} {
 
 // GetFieldNames returns the field names of any struct.
 func GetFieldNames(tag string, s interface{}) []string {
-	t := reflect.TypeOf(s)
+	t := reflect.TypeOf(s).Elem()
 	fieldNames := make([]string, t.NumField())
 
 	for i := 0; i < t.NumField(); i++ {
