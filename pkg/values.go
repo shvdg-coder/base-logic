@@ -66,7 +66,7 @@ func GetFieldNames(s interface{}) []string {
 	fieldNames := make([]string, t.NumField())
 
 	for i := 0; i < t.NumField(); i++ {
-		fieldNames[i] = t.Field(i).Tag.Get("db")
+		fieldNames[i] = t.Field(i).Name
 	}
 	return fieldNames
 }
