@@ -191,7 +191,9 @@ func (d *DbSvc) BulkInsert(table string, fields []string, data [][]interface{}) 
 		return fmt.Errorf("failed starting transaction: %w", err)
 	}
 
-	stmt, err := txn.Prepare(pq.CopyIn(table, fields...))
+	conflictClause := fmt.Sprintf(" ON CONFLICT (%s) DO NOTHING", strings.Join(fields, ", "))
+
+	stmt, err := txn.Prepare(pq.CopyIn(table, fields...) + conflictClause)
 	if err != nil {
 		return fmt.Errorf("failed preparing statement: %w", err)
 	}
