@@ -190,14 +190,22 @@ func (d *DbSvc) BulkInsert(table string, fields []string, data [][]interface{}) 
 	if err != nil {
 		return fmt.Errorf("failed starting transaction: %w", err)
 	}
+	defer txn.Rollback()
 
-	conflictClause := fmt.Sprintf(" ON CONFLICT (%s) DO NOTHING", strings.Join(fields, ", "))
+	// Create a temporary table
+	tempTable := fmt.Sprintf("%s_temp_%d", table, time.Now().UnixNano())
+	_, err = txn.Exec(fmt.Sprintf("CREATE TEMPORARY TABLE %s (LIKE %s) ON COMMIT DROP", tempTable, table))
+	if err != nil {
+		return fmt.Errorf("failed creating temporary table: %w", err)
+	}
 
-	stmt, err := txn.Prepare(pq.CopyIn(table, fields...) + conflictClause)
+	// Prepare statement for copying into temp table
+	stmt, err := txn.Prepare(pq.CopyIn(tempTable, fields...))
 	if err != nil {
 		return fmt.Errorf("failed preparing statement: %w", err)
 	}
 
+	// Copy data into temp table
 	for _, row := range data {
 		_, err := stmt.Exec(row...)
 		if err != nil {
@@ -208,6 +216,12 @@ func (d *DbSvc) BulkInsert(table string, fields []string, data [][]interface{}) 
 	err = stmt.Close()
 	if err != nil {
 		return fmt.Errorf("failed closing statement: %w", err)
+	}
+
+	// Insert from temp table to main table, ignoring conflicts
+	_, err = txn.Exec(fmt.Sprintf("INSERT INTO %s SELECT * FROM %s ON CONFLICT DO NOTHING", table, tempTable))
+	if err != nil {
+		return fmt.Errorf("failed inserting from temporary table: %w", err)
 	}
 
 	err = txn.Commit()
