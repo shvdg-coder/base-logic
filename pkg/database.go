@@ -194,7 +194,7 @@ func (d *DbSvc) BulkInsert(table string, fields []string, data [][]interface{}) 
 
 	// Create a temporary table
 	tempTable := fmt.Sprintf("%s_temp_%d", table, time.Now().UnixNano())
-	_, err = txn.Exec(fmt.Sprintf("CREATE TEMPORARY TABLE \"%s\" (LIKE \"%s\") ON COMMIT DROP", tempTable, table))
+	_, err = txn.Exec(fmt.Sprintf("CREATE TEMPORARY TABLE \"%s\" (LIKE \"%s\" INCLUDING DEFAULTS EXCLUDING CONSTRAINTS) ON COMMIT DROP", tempTable, table))
 	if err != nil {
 		return fmt.Errorf("failed creating temporary table: %w", err)
 	}
